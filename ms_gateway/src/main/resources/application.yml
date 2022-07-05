@@ -1,0 +1,94 @@
+
+server:
+  port: 9191
+
+
+spring:
+  application:
+    name: API-GATEWAY
+  cloud:
+    gateway:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:3000"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+      routes:
+        - id: CARDIO-AUTH-SERVICE
+          uri: lb://CARDIO-AUTH-SERVICE
+          predicates:
+            - Path=/service-auth/**
+          filters:
+            - RewritePath=/service-auth/(?<s>.*), /${s}
+            - name: CircuitBreaker
+              args:
+                name: fallback-ms-auth
+                fallbackuri: forward:/CardioAuthServiceFallBack
+
+        - id: DOSSIER-MEDICAL-SERVICE
+          uri: lb://DOSSIER-MEDICAL-SERVICE
+          predicates:
+            - Path=/service-dm/**
+          filters:
+            - RewritePath=/service-dm/(?<s>.*), /${s}
+            - name: CircuitBreaker
+              args:
+                name: fallback-ms-dm
+                fallbackuri: forward:/CardioDMServiceFallBack
+
+hystrix:
+  command:
+    fallbackcmd:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 4000
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 2s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+        recordExceptions:
+          - org.springframework.web.client.HttpServerErrorException
+          - java.io.IOException
+        ignoreExceptions:
+          - java.lang.IllegalStateException
+        shared:
+          slidingWindowSize: 100
+          permittedNumberOfCallsInHalfOpenState: 30
+          waitDurationInOpenState: 1s
+          failureRateThreshold: 50
+          eventConsumerBufferSize: 10
+          ignoreExceptions:
+            - java.lang.IllegalStateException
+timelimiter:
+  configs:
+    default:
+      timeoutDuration: 10s
+      cancelRunningFuture: false
+instances:
+  backendB:
+    timeoutDuration: 250ms
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    hostname: localhost
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"

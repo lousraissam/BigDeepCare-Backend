@@ -1,0 +1,30 @@
+POST METHODS:
+
+http://localhost:9191/service-auth/authenticate
+
+{
+    "username":"salima",
+    "password":"salimasalima"
+}
+
+----------------------------------------------------------------------------
+http://localhost:9191/service-auth/registerPatient
+
+{
+    "username":"amina",
+    "password":"amina",
+    "telephone":"07986931",
+    "role":"ROLE_PATIENT",
+    "state":"ACTIVE"
+}
+
+------------------------------------------------------------------------------
+http://localhost:9191/service-auth/register
+
+{
+    "username":"yacin",
+    "password":"yacin",
+    "telephone":"07986931",
+    "role":"ROLE_MEDECIN",
+    "state":"ACTIVE"
+}
